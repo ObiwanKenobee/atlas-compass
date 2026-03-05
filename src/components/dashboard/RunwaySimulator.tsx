@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { runwayData } from "@/data/dashboardData";
 import { Slider } from "@/components/ui/slider";
 
@@ -25,7 +26,13 @@ export default function RunwaySimulator() {
   const basePercent = Math.min((runwayData.runwayMonths / maxMonths) * 100, 100);
 
   return (
-    <div className="gradient-card border border-border rounded-2xl p-6 flex flex-col gap-5 relative overflow-hidden">
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.55, ease: "easeOut" }}
+      className="gradient-card border border-border rounded-2xl p-6 flex flex-col gap-5 relative overflow-hidden"
+    >
       <div
         className="absolute top-0 right-0 w-48 h-48 rounded-full opacity-5 blur-3xl pointer-events-none"
         style={{ background: signal.color }}
@@ -158,6 +165,6 @@ export default function RunwaySimulator() {
           <span>36mo</span>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
