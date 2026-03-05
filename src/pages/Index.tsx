@@ -1,4 +1,6 @@
+import { motion } from "framer-motion";
 import dashboardBg from "@/assets/dashboard-bg.jpg";
+import NavBar from "@/components/dashboard/NavBar";
 import BurnRateCard from "@/components/dashboard/BurnRateCard";
 import RunwayCard from "@/components/dashboard/RunwayCard";
 import MRRCard from "@/components/dashboard/MRRCard";
@@ -8,6 +10,7 @@ import EfficiencyMetricsCard from "@/components/dashboard/EfficiencyMetricsCard"
 import ImpactBridgeCard from "@/components/dashboard/ImpactBridgeCard";
 import RunwaySimulator from "@/components/dashboard/RunwaySimulator";
 import InvestorFeed from "@/components/dashboard/InvestorFeed";
+import ExportButton from "@/components/dashboard/ExportButton";
 
 const now = new Date();
 const dateStr = now.toLocaleDateString("en-US", {
@@ -17,26 +20,42 @@ const dateStr = now.toLocaleDateString("en-US", {
   day: "numeric",
 });
 
+const sectionInitial = { opacity: 0, y: 28 };
+const sectionAnimate = { opacity: 1, y: 0 };
+const sectionTransition = { duration: 0.5 };
+
+function SectionDivider({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-3 mb-5">
+      <div className="h-px flex-1" style={{ background: "hsl(var(--border))" }} />
+      <span className="text-xs font-medium uppercase tracking-widest px-3 text-muted-foreground">
+        {label}
+      </span>
+      <div className="h-px flex-1" style={{ background: "hsl(var(--border))" }} />
+    </div>
+  );
+}
+
 export default function Index() {
   return (
-    <div
-      className="min-h-screen scrollbar-thin"
-      style={{ background: "hsl(var(--background))" }}
-    >
-      {/* Header */}
-      <header
-        className="relative border-b border-border overflow-hidden"
-        style={{ borderColor: "hsl(var(--border))" }}
-      >
+    <div className="min-h-screen scrollbar-thin" style={{ background: "hsl(var(--background))" }}>
+      <NavBar />
+
+      {/* Header banner */}
+      <header className="relative border-b border-border overflow-hidden">
         <img
           src={dashboardBg}
           alt="Atlas Sanctum dashboard background"
-          className="absolute inset-0 w-full h-full object-cover opacity-30"
+          className="absolute inset-0 w-full h-full object-cover opacity-25"
         />
-        <div className="relative z-10 px-6 py-8 md:px-10">
-          <div className="flex items-start justify-between flex-wrap gap-4">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
+        <div className="relative z-10 px-6 py-7 md:px-10">
+          <div className="flex items-start justify-between flex-wrap gap-4 max-w-[1600px] mx-auto">
+            <motion.div
+              initial={{ opacity: 0, x: -16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="flex items-center gap-3 mb-1.5">
                 <div
                   className="w-2 h-2 rounded-full animate-pulse"
                   style={{ background: "hsl(var(--signal-green))" }}
@@ -45,107 +64,98 @@ export default function Index() {
                   className="text-xs font-medium uppercase tracking-widest"
                   style={{ color: "hsl(var(--signal-green))" }}
                 >
-                  Live Dashboard
+                  Live Financial Dashboard
                 </span>
               </div>
-              <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight">
-                Atlas Sanctum
+              <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight">
+                North-Star Panel
               </h1>
-              <p
-                className="mt-1 text-sm"
-                style={{ color: "hsl(var(--muted-foreground))" }}
-              >
-                North-Star Financial Intelligence Panel
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Series A · Q1 2025 · Confidential
               </p>
-            </div>
-            <div className="text-right">
-              <p className="text-xs text-muted-foreground">{dateStr}</p>
-              <p
-                className="text-xs font-mono-custom mt-1"
-                style={{ color: "hsl(var(--signal-green))" }}
-              >
-                Series A · Q1 2025
-              </p>
-            </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="flex items-center gap-3"
+            >
+              <div className="text-right hidden sm:block">
+                <p className="text-xs text-muted-foreground">{dateStr}</p>
+                <p className="text-xs font-mono-custom mt-0.5" style={{ color: "hsl(var(--muted-foreground))" }}>
+                  Last updated: just now
+                </p>
+              </div>
+              <ExportButton targetId="dashboard-export-root" />
+            </motion.div>
           </div>
         </div>
       </header>
 
-      <main className="px-4 py-8 md:px-8 lg:px-10 space-y-10 max-w-[1600px] mx-auto">
-
-        {/* ── Section 1: North-Star Panel ─────────────────────────── */}
-        <section>
-          <div className="flex items-center gap-3 mb-5">
-            <div
-              className="h-px flex-1"
-              style={{ background: "hsl(var(--border))" }}
-            />
-            <span
-              className="text-xs font-medium uppercase tracking-widest px-3"
-              style={{ color: "hsl(var(--muted-foreground))" }}
-            >
-              Survival Metrics
-            </span>
-            <div
-              className="h-px flex-1"
-              style={{ background: "hsl(var(--border))" }}
-            />
-          </div>
+      {/* Main dashboard — this div is the export target */}
+      <main
+        id="dashboard-export-root"
+        className="px-4 py-8 md:px-8 lg:px-10 space-y-10 max-w-[1600px] mx-auto"
+      >
+        {/* ── Survival Metrics ──────────────────────────────────── */}
+        <motion.section
+          initial={sectionInitial}
+          animate={sectionAnimate}
+          transition={{ ...sectionTransition, delay: 0.1 }}
+        >
+          <SectionDivider label="Survival Metrics" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <BurnRateCard />
             <RunwayCard />
             <MRRCard />
           </div>
-        </section>
+        </motion.section>
 
-        {/* ── Section 2: Financial Health Snapshot ────────────────── */}
-        <section>
-          <div className="flex items-center gap-3 mb-5">
-            <div className="h-px flex-1" style={{ background: "hsl(var(--border))" }} />
-            <span className="text-xs font-medium uppercase tracking-widest px-3 text-muted-foreground">
-              Financial Health Snapshot
-            </span>
-            <div className="h-px flex-1" style={{ background: "hsl(var(--border))" }} />
-          </div>
+        {/* ── Financial Health ──────────────────────────────────── */}
+        <motion.section
+          initial={sectionInitial}
+          whileInView={sectionAnimate}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={sectionTransition}
+        >
+          <SectionDivider label="Financial Health Snapshot" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <RevenueStreamsCard />
             <CostStructureCard />
           </div>
-        </section>
+        </motion.section>
 
-        {/* ── Section 3: Efficiency + Impact ──────────────────────── */}
-        <section>
-          <div className="flex items-center gap-3 mb-5">
-            <div className="h-px flex-1" style={{ background: "hsl(var(--border))" }} />
-            <span className="text-xs font-medium uppercase tracking-widest px-3 text-muted-foreground">
-              Growth, Efficiency & Impact
-            </span>
-            <div className="h-px flex-1" style={{ background: "hsl(var(--border))" }} />
-          </div>
+        {/* ── Growth & Impact ───────────────────────────────────── */}
+        <motion.section
+          initial={sectionInitial}
+          whileInView={sectionAnimate}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={sectionTransition}
+        >
+          <SectionDivider label="Growth, Efficiency & Impact" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <EfficiencyMetricsCard />
             <ImpactBridgeCard />
           </div>
-        </section>
+        </motion.section>
 
-        {/* ── Section 4: Simulator + Feed ─────────────────────────── */}
-        <section>
-          <div className="flex items-center gap-3 mb-5">
-            <div className="h-px flex-1" style={{ background: "hsl(var(--border))" }} />
-            <span className="text-xs font-medium uppercase tracking-widest px-3 text-muted-foreground">
-              Scenario Planning & Transparency
-            </span>
-            <div className="h-px flex-1" style={{ background: "hsl(var(--border))" }} />
-          </div>
+        {/* ── Scenario Planning ─────────────────────────────────── */}
+        <motion.section
+          initial={sectionInitial}
+          whileInView={sectionAnimate}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={sectionTransition}
+        >
+          <SectionDivider label="Scenario Planning & Transparency" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <RunwaySimulator />
             <InvestorFeed />
           </div>
-        </section>
+        </motion.section>
 
-        {/* Footer */}
         <footer className="pb-8 flex items-center justify-between text-xs text-muted-foreground border-t border-border pt-6">
-          <span>Atlas Sanctum — Confidential · Not for distribution</span>
+          <span>Atlas Sanctum · Confidential · Not for distribution</span>
           <span className="font-mono-custom">v1.0.0 · Q1 2025</span>
         </footer>
       </main>

@@ -1,5 +1,6 @@
+import { motion } from "framer-motion";
 import { investorFeedData } from "@/data/dashboardData";
-import { Code2, Globe, Leaf, Link, Zap } from "lucide-react";
+import { Code2, Globe, Leaf, Link } from "lucide-react";
 
 const typeConfig: Record<string, { icon: JSX.Element; color: string; label: string }> = {
   product: {
@@ -26,7 +27,13 @@ const typeConfig: Record<string, { icon: JSX.Element; color: string; label: stri
 
 export default function InvestorFeed() {
   return (
-    <div className="gradient-card border border-border rounded-2xl p-6 flex flex-col gap-4">
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.55, delay: 0.1, ease: "easeOut" }}
+      className="gradient-card border border-border rounded-2xl p-6 flex flex-col gap-4"
+    >
       <div>
         <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-1">
           Investor Transparency Feed
@@ -79,6 +86,6 @@ export default function InvestorFeed() {
           );
         })}
       </div>
-    </div>
+    </motion.div>
   );
 }

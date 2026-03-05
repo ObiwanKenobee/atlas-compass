@@ -1,15 +1,19 @@
 import { mrrData } from "@/data/dashboardData";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { TrendingUp } from "lucide-react";
-
-const formatK = (v: number) =>
-  v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(2)}M` : `$${(v / 1000).toFixed(0)}K`;
+import { motion } from "framer-motion";
+import { AnimatedNumber, formatCurrencyShort } from "./AnimatedNumber";
 
 export default function MRRCard() {
   const { current, growthPercent, history } = mrrData;
 
   return (
-    <div className="gradient-card border border-border rounded-2xl p-6 flex flex-col gap-4 relative overflow-hidden">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+      className="gradient-card border border-border rounded-2xl p-6 flex flex-col gap-4 relative overflow-hidden"
+    >
       <div
         className="absolute top-0 right-0 w-36 h-36 rounded-full opacity-10 blur-3xl pointer-events-none"
         style={{ background: "hsl(var(--signal-blue))" }}
@@ -35,12 +39,12 @@ export default function MRRCard() {
       </div>
 
       <div>
-        <span
+        <AnimatedNumber
+          value={current}
+          formatFn={formatCurrencyShort}
           className="metric-value text-5xl"
-          style={{ color: "hsl(var(--signal-blue))" }}
-        >
-          {formatK(current)}
-        </span>
+          style={{ color: "hsl(var(--signal-blue))" } as React.CSSProperties}
+        />
         <span className="text-muted-foreground text-sm ml-2">/mo</span>
       </div>
 
@@ -67,7 +71,7 @@ export default function MRRCard() {
                 fontSize: "11px",
                 color: "hsl(var(--foreground))",
               }}
-              formatter={(v: number) => [formatK(v), "MRR"]}
+              formatter={(v: number) => [formatCurrencyShort(v), "MRR"]}
               labelStyle={{ color: "hsl(var(--muted-foreground))" }}
             />
             <Area
@@ -81,6 +85,6 @@ export default function MRRCard() {
           </AreaChart>
         </ResponsiveContainer>
       </div>
-    </div>
+    </motion.div>
   );
 }

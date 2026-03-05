@@ -1,14 +1,8 @@
 import { cacData, ltvData, revenuePerEmployee } from "@/data/dashboardData";
-import {
-  Area,
-  AreaChart,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
-import { TrendingDown, TrendingUp, Users } from "lucide-react";
-
-const fmt = (v: number) =>
-  v >= 1000 ? `$${(v / 1000).toFixed(0)}K` : `$${v.toLocaleString()}`;
+import { Area, AreaChart, ResponsiveContainer, Tooltip } from "recharts";
+import { TrendingDown, Users } from "lucide-react";
+import { motion } from "framer-motion";
+import { AnimatedNumber, formatCurrencyShort } from "./AnimatedNumber";
 
 function MiniAreaChart({
   data,
@@ -37,7 +31,7 @@ function MiniAreaChart({
               fontSize: "11px",
               color: "hsl(var(--foreground))",
             }}
-            formatter={(v: number) => [fmt(v), "CAC"]}
+            formatter={(v: number) => [formatCurrencyShort(v), "CAC"]}
             labelStyle={{ color: "hsl(var(--muted-foreground))" }}
           />
           <Area
@@ -56,24 +50,38 @@ function MiniAreaChart({
 
 export default function EfficiencyMetricsCard() {
   return (
-    <div className="gradient-card border border-border rounded-2xl p-6 flex flex-col gap-5">
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.55, ease: "easeOut" }}
+      className="gradient-card border border-border rounded-2xl p-6 flex flex-col gap-5"
+    >
       <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
         Growth & Efficiency
       </p>
 
       <div className="grid grid-cols-1 gap-4">
         {/* CAC */}
-        <div className="bg-surface-2 rounded-xl p-4" style={{ background: "hsl(var(--surface-2))" }}>
+        <div className="rounded-xl p-4" style={{ background: "hsl(var(--surface-2))" }}>
           <div className="flex items-center justify-between mb-2">
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wider">Customer Acquisition Cost</p>
-              <p className="metric-value text-2xl" style={{ color: "hsl(var(--signal-yellow))" }}>
-                {fmt(cacData[cacData.length - 1].value)}
+              <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                Customer Acquisition Cost
               </p>
+              <AnimatedNumber
+                value={cacData[cacData.length - 1].value}
+                formatFn={formatCurrencyShort}
+                className="metric-value text-2xl"
+                style={{ color: "hsl(var(--signal-yellow))" }}
+              />
             </div>
             <span
               className="flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full"
-              style={{ background: "hsl(var(--signal-green) / 0.1)", color: "hsl(var(--signal-green))" }}
+              style={{
+                background: "hsl(var(--signal-green) / 0.1)",
+                color: "hsl(var(--signal-green))",
+              }}
             >
               <TrendingDown className="w-3 h-3" />
               -32% 6mo
@@ -84,50 +92,70 @@ export default function EfficiencyMetricsCard() {
 
         {/* LTV */}
         <div className="rounded-xl p-4" style={{ background: "hsl(var(--surface-2))" }}>
-          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Customer Lifetime Value</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+            Customer Lifetime Value
+          </p>
           <div className="flex items-end justify-between">
-            <p className="metric-value text-2xl" style={{ color: "hsl(var(--signal-blue))" }}>
-              {fmt(ltvData.current)}
-            </p>
+            <AnimatedNumber
+              value={ltvData.current}
+              formatFn={formatCurrencyShort}
+              className="metric-value text-2xl"
+              style={{ color: "hsl(var(--signal-blue))" }}
+            />
             <div className="text-right">
               <p className="text-xs text-muted-foreground">LTV : CAC Ratio</p>
-              <p
+              <AnimatedNumber
+                value={ltvData.ratio}
+                decimals={1}
+                suffix="x"
                 className="text-lg font-bold font-mono-custom"
                 style={{ color: "hsl(var(--signal-green))" }}
-              >
-                {ltvData.ratio}x
-              </p>
+              />
             </div>
           </div>
           <div className="mt-3 h-2 rounded-full overflow-hidden" style={{ background: "hsl(var(--surface-3))" }}>
-            <div
+            <motion.div
               className="h-full rounded-full"
+              initial={{ width: 0 }}
+              whileInView={{ width: "83%" }}
+              viewport={{ once: true }}
+              transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
               style={{
-                width: "83%",
                 background: "linear-gradient(90deg, hsl(210, 80%, 60%), hsl(152, 52%, 42%))",
               }}
             />
           </div>
-          <p className="text-xs text-muted-foreground mt-1">Target ≥ 3x — Currently exceptional</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Target ≥ 3x — Currently exceptional
+          </p>
         </div>
 
         {/* Revenue per Employee */}
         <div className="rounded-xl p-4" style={{ background: "hsl(var(--surface-2))" }}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Revenue per Employee</p>
-              <p className="metric-value text-2xl" style={{ color: "hsl(var(--signal-green))" }}>
-                {fmt(revenuePerEmployee.current)}
-                <span className="text-muted-foreground text-sm font-normal ml-1">/mo</span>
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                Revenue per Employee
               </p>
+              <div className="flex items-baseline gap-1">
+                <AnimatedNumber
+                  value={revenuePerEmployee.current}
+                  formatFn={formatCurrencyShort}
+                  className="metric-value text-2xl"
+                  style={{ color: "hsl(var(--signal-green))" }}
+                />
+                <span className="text-muted-foreground text-sm">/mo</span>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-semibold">{revenuePerEmployee.headcount} FTE</span>
+              <span className="text-sm font-semibold">
+                {revenuePerEmployee.headcount} FTE
+              </span>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
