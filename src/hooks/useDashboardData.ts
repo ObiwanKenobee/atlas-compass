@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export function useDashboardMetrics() {
@@ -14,6 +14,27 @@ export function useDashboardMetrics() {
       if (error) throw error;
       return data;
     },
+  });
+}
+
+export function useUpdateMetrics() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (updates: Record<string, number>) => {
+      const { data: existing } = await supabase
+        .from("financial_metrics")
+        .select("id")
+        .order("metric_date", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!existing) throw new Error("No metrics row found");
+      const { error } = await supabase
+        .from("financial_metrics")
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq("id", existing.id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["financial_metrics"] }),
   });
 }
 
@@ -60,6 +81,23 @@ export function useCostStructure() {
         .maybeSingle();
       if (error) throw error;
       return data;
+    },
+  });
+}
+
+export function useMetricsHistory(from?: Date, to?: Date) {
+  return useQuery({
+    queryKey: ["metrics_history", from?.toISOString(), to?.toISOString()],
+    queryFn: async () => {
+      let query = supabase
+        .from("metrics_history")
+        .select("*")
+        .order("metric_date", { ascending: true });
+      if (from) query = query.gte("metric_date", from.toISOString().slice(0, 10));
+      if (to) query = query.lte("metric_date", to.toISOString().slice(0, 10));
+      const { data, error } = await query;
+      if (error) throw error;
+      return data ?? [];
     },
   });
 }

@@ -3,10 +3,17 @@ import { Area, AreaChart, ResponsiveContainer, Tooltip } from "recharts";
 import { TrendingDown, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 import { AnimatedNumber, formatCurrencyShort } from "./AnimatedNumber";
+import InlineEdit from "./InlineEdit";
+import { useDashboardMetrics, useUpdateMetrics } from "@/hooks/useDashboardData";
 
 export default function BurnRateCard() {
-  const { current, previousMonth, trend, history } = burnRateData;
-  const delta = ((previousMonth - current) / previousMonth) * 100;
+  const { data: live } = useDashboardMetrics();
+  const { mutateAsync: updateMetric } = useUpdateMetrics();
+
+  const burnRate = live ? Number(live.burn_rate) : burnRateData.current;
+  const prevMonth = burnRateData.previousMonth;
+  const { trend, history } = burnRateData;
+  const delta = ((prevMonth - burnRate) / prevMonth) * 100;
   const isDown = trend === "down";
 
   return (
@@ -14,7 +21,7 @@ export default function BurnRateCard() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="gradient-card border border-border rounded-2xl p-6 flex flex-col gap-4 relative overflow-hidden"
+      className="gradient-card border border-border rounded-2xl p-6 flex flex-col gap-4 relative overflow-hidden group"
     >
       <div
         className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-10 blur-3xl pointer-events-none"
@@ -40,14 +47,16 @@ export default function BurnRateCard() {
         </span>
       </div>
 
-      <div>
-        <AnimatedNumber
-          value={current}
+      <div className="flex items-baseline gap-2">
+        <InlineEdit
+          label="Burn Rate"
+          value={burnRate}
           formatFn={formatCurrencyShort}
+          onSave={(v) => updateMetric({ burn_rate: v })}
+          valueColor={isDown ? "hsl(var(--signal-green))" : "hsl(var(--signal-red))"}
           className="metric-value text-5xl"
-          style={{ color: isDown ? "hsl(var(--signal-green))" : "hsl(var(--signal-red))" } as React.CSSProperties}
         />
-        <span className="text-muted-foreground text-sm ml-2">/mo</span>
+        <span className="text-muted-foreground text-sm">/mo</span>
       </div>
 
       <div className="h-16 w-full">
@@ -60,24 +69,11 @@ export default function BurnRateCard() {
               </linearGradient>
             </defs>
             <Tooltip
-              contentStyle={{
-                background: "hsl(var(--surface-1))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "8px",
-                fontSize: "11px",
-                color: "hsl(var(--foreground))",
-              }}
+              contentStyle={{ background: "hsl(var(--surface-1))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "11px", color: "hsl(var(--foreground))" }}
               formatter={(v: number) => [formatCurrencyShort(v), "Burn"]}
               labelStyle={{ color: "hsl(var(--muted-foreground))" }}
             />
-            <Area
-              type="monotone"
-              dataKey="value"
-              stroke={isDown ? "hsl(152, 62%, 46%)" : "hsl(0, 72%, 55%)"}
-              strokeWidth={2}
-              fill="url(#burnGrad)"
-              dot={false}
-            />
+            <Area type="monotone" dataKey="value" stroke={isDown ? "hsl(152, 62%, 46%)" : "hsl(0, 72%, 55%)"} strokeWidth={2} fill="url(#burnGrad)" dot={false} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
