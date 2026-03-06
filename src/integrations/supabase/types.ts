@@ -122,6 +122,39 @@ export type Database = {
         }
         Relationships: []
       }
+      metrics_history: {
+        Row: {
+          burn_rate: number
+          cac: number
+          cash_on_hand: number
+          created_at: string
+          id: string
+          metric_date: string
+          mrr: number
+          runway_months: number
+        }
+        Insert: {
+          burn_rate: number
+          cac: number
+          cash_on_hand: number
+          created_at?: string
+          id?: string
+          metric_date: string
+          mrr: number
+          runway_months: number
+        }
+        Update: {
+          burn_rate?: number
+          cac?: number
+          cash_on_hand?: number
+          created_at?: string
+          id?: string
+          metric_date?: string
+          mrr?: number
+          runway_months?: number
+        }
+        Relationships: []
+      }
       revenue_streams: {
         Row: {
           created_at: string

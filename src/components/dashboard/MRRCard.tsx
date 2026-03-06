@@ -2,10 +2,17 @@ import { mrrData } from "@/data/dashboardData";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
-import { AnimatedNumber, formatCurrencyShort } from "./AnimatedNumber";
+import { formatCurrencyShort } from "./AnimatedNumber";
+import InlineEdit from "./InlineEdit";
+import { useDashboardMetrics, useUpdateMetrics } from "@/hooks/useDashboardData";
 
 export default function MRRCard() {
-  const { current, growthPercent, history } = mrrData;
+  const { data: live } = useDashboardMetrics();
+  const { mutateAsync: updateMetric } = useUpdateMetrics();
+
+  const mrr = live ? Number(live.mrr) : mrrData.current;
+  const growthPercent = live ? Number(live.mrr_growth_percent) : mrrData.growthPercent;
+  const { history } = mrrData;
 
   return (
     <motion.div
@@ -14,38 +21,31 @@ export default function MRRCard() {
       transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
       className="gradient-card border border-border rounded-2xl p-6 flex flex-col gap-4 relative overflow-hidden"
     >
-      <div
-        className="absolute top-0 right-0 w-36 h-36 rounded-full opacity-10 blur-3xl pointer-events-none"
-        style={{ background: "hsl(var(--signal-blue))" }}
-      />
+      <div className="absolute top-0 right-0 w-36 h-36 rounded-full opacity-10 blur-3xl pointer-events-none" style={{ background: "hsl(var(--signal-blue))" }} />
 
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-1">
-            Monthly Recurring Revenue
-          </p>
+          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-1">Monthly Recurring Revenue</p>
           <p className="text-xs text-muted-foreground">Last 12 months</p>
         </div>
-        <span
-          className="flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full"
-          style={{
-            background: "hsl(var(--signal-green) / 0.1)",
-            color: "hsl(var(--signal-green))",
-          }}
-        >
-          <TrendingUp className="w-3 h-3" />
-          +{growthPercent}% MoM
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full" style={{ background: "hsl(var(--signal-green) / 0.1)", color: "hsl(var(--signal-green))" }}>
+            <TrendingUp className="w-3 h-3" />
+            +{growthPercent}% MoM
+          </span>
+        </div>
       </div>
 
-      <div>
-        <AnimatedNumber
-          value={current}
+      <div className="flex items-baseline gap-2">
+        <InlineEdit
+          label="MRR"
+          value={mrr}
           formatFn={formatCurrencyShort}
+          onSave={(v) => updateMetric({ mrr: v })}
+          valueColor="hsl(var(--signal-blue))"
           className="metric-value text-5xl"
-          style={{ color: "hsl(var(--signal-blue))" } as React.CSSProperties}
         />
-        <span className="text-muted-foreground text-sm ml-2">/mo</span>
+        <span className="text-muted-foreground text-sm">/mo</span>
       </div>
 
       <div className="h-20 w-full">
@@ -57,31 +57,13 @@ export default function MRRCard() {
                 <stop offset="95%" stopColor="hsl(210, 80%, 60%)" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <XAxis
-              dataKey="month"
-              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-              axisLine={false}
-              tickLine={false}
-            />
+            <XAxis dataKey="month" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
             <Tooltip
-              contentStyle={{
-                background: "hsl(var(--surface-1))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "8px",
-                fontSize: "11px",
-                color: "hsl(var(--foreground))",
-              }}
+              contentStyle={{ background: "hsl(var(--surface-1))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "11px", color: "hsl(var(--foreground))" }}
               formatter={(v: number) => [formatCurrencyShort(v), "MRR"]}
               labelStyle={{ color: "hsl(var(--muted-foreground))" }}
             />
-            <Area
-              type="monotone"
-              dataKey="value"
-              stroke="hsl(210, 80%, 60%)"
-              strokeWidth={2}
-              fill="url(#mrrGrad)"
-              dot={false}
-            />
+            <Area type="monotone" dataKey="value" stroke="hsl(210, 80%, 60%)" strokeWidth={2} fill="url(#mrrGrad)" dot={false} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
