@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
-import { investorFeedData } from "@/data/dashboardData";
-import { Code2, Globe, Leaf, Link } from "lucide-react";
+import { useInvestorUpdates } from "@/hooks/useDashboardData";
+import { Code2, Globe, Leaf, Link, Loader2 } from "lucide-react";
 
-const typeConfig: Record<string, { icon: JSX.Element; color: string; label: string }> = {
+const typeConfig: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
   product: {
     icon: <Code2 className="w-3.5 h-3.5" />,
     color: "hsl(var(--signal-blue))",
@@ -26,12 +26,14 @@ const typeConfig: Record<string, { icon: JSX.Element; color: string; label: stri
 };
 
 export default function InvestorFeed() {
+  const { data: updates, isLoading } = useInvestorUpdates();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.55, delay: 0.1, ease: "easeOut" }}
+      transition={{ duration: 0.55, delay: 0.1 }}
       className="gradient-card border border-border rounded-2xl p-6 flex flex-col gap-4"
     >
       <div>
@@ -41,51 +43,59 @@ export default function InvestorFeed() {
         <p className="text-xs text-muted-foreground">Live operational progress</p>
       </div>
 
-      <div className="flex flex-col gap-0">
-        {investorFeedData.map((item, i) => {
-          const cfg = typeConfig[item.type] || typeConfig.product;
-          const isLast = i === investorFeedData.length - 1;
-          return (
-            <div key={i} className="flex gap-3 relative">
-              {/* Timeline line */}
-              {!isLast && (
+      {isLoading ? (
+        <div className="flex items-center justify-center h-40">
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+        <div className="flex flex-col gap-0">
+          {(updates ?? []).map((item, i) => {
+            const cfg = typeConfig[item.update_type] ?? typeConfig.product;
+            const isLast = i === (updates?.length ?? 0) - 1;
+            return (
+              <div key={item.id} className="flex gap-3 relative">
+                {!isLast && (
+                  <div
+                    className="absolute left-4 top-8 bottom-0 w-px"
+                    style={{ background: "hsl(var(--border))" }}
+                  />
+                )}
                 <div
-                  className="absolute left-4 top-8 bottom-0 w-px"
-                  style={{ background: "hsl(var(--border))" }}
-                />
-              )}
-
-              {/* Icon */}
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10 mt-0.5"
-                style={{
-                  background: `${cfg.color}18`,
-                  color: cfg.color,
-                  border: `1px solid ${cfg.color}30`,
-                }}
-              >
-                {cfg.icon}
-              </div>
-
-              <div className={`flex-1 pb-4 ${isLast ? "" : ""}`}>
-                <div className="flex items-center gap-2 mb-0.5">
-                  <span
-                    className="text-xs font-semibold px-1.5 py-0.5 rounded"
-                    style={{ background: `${cfg.color}15`, color: cfg.color }}
-                  >
-                    {cfg.label}
-                  </span>
-                  <span className="text-xs text-muted-foreground">{item.date}</span>
+                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10 mt-0.5"
+                  style={{
+                    background: `${cfg.color}18`,
+                    color: cfg.color,
+                    border: `1px solid ${cfg.color}30`,
+                  }}
+                >
+                  {cfg.icon}
                 </div>
-                <p className="text-sm font-medium mb-0.5">{item.title}</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  {item.description}
-                </p>
+                <div className="flex-1 pb-4">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span
+                      className="text-xs font-semibold px-1.5 py-0.5 rounded"
+                      style={{ background: `${cfg.color}15`, color: cfg.color }}
+                    >
+                      {cfg.label}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(item.update_date).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </span>
+                  </div>
+                  <p className="text-sm font-medium mb-0.5">{item.title}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {item.description}
+                  </p>
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </motion.div>
   );
 }
