@@ -112,6 +112,11 @@ export default function Index() {
           </div>
         </motion.section>
 
+        <motion.section initial={sectionInitial} whileInView={sectionAnimate} viewport={{ once: true, margin: "-80px" }} transition={{ ...sectionTransition, delay: 0.05 }}>
+          <SectionDivider label="Founder Controls" />
+          <MetricEditPanel />
+        </motion.section>
+
         <footer className="pb-8 flex items-center justify-between text-xs text-muted-foreground border-t border-border pt-6">
           <span>Atlas Sanctum · Confidential · Not for distribution</span>
           <span className="font-mono-custom">v1.0.0 · Q1 2025</span>
