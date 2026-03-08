@@ -1,6 +1,39 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+export function useInvestorProfile() {
+  return useQuery({
+    queryKey: ["investor_profile"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from("investor_profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+export function useUpdateProfile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (updates: { firm_name?: string; full_name?: string; notes?: string }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      const { error } = await supabase
+        .from("investor_profiles")
+        .update(updates)
+        .eq("user_id", user.id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["investor_profile"] }),
+  });
+}
+
 export function useDashboardMetrics() {
   return useQuery({
     queryKey: ["financial_metrics"],
