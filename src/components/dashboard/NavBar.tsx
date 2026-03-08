@@ -2,6 +2,8 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LayoutDashboard, FolderOpen, FileText, Settings, ChevronDown, LogOut, User, Bell } from "lucide-react";
 import atlasLogo from "@/assets/atlas-logo.png";
+import { supabase } from "@/integrations/supabase/client";
+import { useInvestorProfile } from "@/hooks/useDashboardData";
 
 const navLinks = [
   { label: "Dashboard", icon: LayoutDashboard, href: "#", active: true },
@@ -10,8 +12,28 @@ const navLinks = [
   { label: "Settings", icon: Settings, href: "#", active: false },
 ];
 
+function getInitials(name?: string | null, email?: string | null): string {
+  if (name) {
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+  if (email) return email.slice(0, 2).toUpperCase();
+  return "AS";
+}
+
 export default function NavBar() {
   const [avatarOpen, setAvatarOpen] = useState(false);
+  const { data: profile } = useInvestorProfile();
+
+  const displayName = profile?.full_name ?? "Investor";
+  const firmName = profile?.firm_name ?? "Atlas Sanctum";
+  const accessTier = profile?.access_tier ?? "observer";
+  const initials = getInitials(profile?.full_name);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
 
   return (
     <nav
@@ -130,12 +152,12 @@ export default function NavBar() {
                   color: "hsl(var(--primary-foreground))",
                 }}
               >
-                AS
+                {initials}
               </div>
               <div className="hidden md:block text-left">
-                <p className="text-xs font-medium leading-tight">Founder</p>
+                <p className="text-xs font-medium leading-tight">{displayName}</p>
                 <p className="text-xs leading-tight" style={{ color: "hsl(var(--muted-foreground))" }}>
-                  Series A
+                  {firmName} · <span className="capitalize">{accessTier}</span>
                 </p>
               </div>
               <ChevronDown
@@ -154,17 +176,30 @@ export default function NavBar() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -6, scale: 0.97 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute right-0 top-full mt-1.5 w-44 rounded-xl border overflow-hidden shadow-2xl z-50"
+                  className="absolute right-0 top-full mt-1.5 w-52 rounded-xl border overflow-hidden shadow-2xl z-50"
                   style={{
                     background: "hsl(var(--surface-1))",
                     borderColor: "hsl(var(--border))",
                   }}
                 >
                   <div className="px-3 py-2.5 border-b" style={{ borderColor: "hsl(var(--border))" }}>
-                    <p className="text-xs font-semibold">Atlas Sanctum</p>
+                    <p className="text-xs font-semibold">{displayName}</p>
                     <p className="text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>
-                      founder@atlassanctum.io
+                      {firmName}
                     </p>
+                    <span
+                      className="inline-block mt-1 text-xs px-1.5 py-0.5 rounded-full capitalize font-medium"
+                      style={{
+                        background: accessTier === "full"
+                          ? "hsl(var(--primary) / 0.15)"
+                          : "hsl(var(--surface-3))",
+                        color: accessTier === "full"
+                          ? "hsl(var(--primary))"
+                          : "hsl(var(--muted-foreground))",
+                      }}
+                    >
+                      {accessTier} access
+                    </span>
                   </div>
                   {[
                     { icon: User, label: "Profile" },
@@ -187,6 +222,7 @@ export default function NavBar() {
                   ))}
                   <div className="border-t" style={{ borderColor: "hsl(var(--border))" }}>
                     <button
+                      onClick={handleSignOut}
                       className="w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors"
                       style={{ color: "hsl(var(--signal-red))" }}
                       onMouseEnter={(e) => {

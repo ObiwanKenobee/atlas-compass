@@ -16,6 +16,7 @@ import InvestorFeed from "@/components/dashboard/InvestorFeed";
 import ExportButton from "@/components/dashboard/ExportButton";
 import HistoricalTrendsPanel from "@/components/dashboard/HistoricalTrendsPanel";
 import AuthPage from "./AuthPage";
+import MetricEditPanel from "@/components/dashboard/MetricEditPanel";
 
 const now = new Date();
 const dateStr = now.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
