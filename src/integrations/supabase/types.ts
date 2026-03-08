@@ -95,6 +95,39 @@ export type Database = {
         }
         Relationships: []
       }
+      investor_profiles: {
+        Row: {
+          access_tier: string
+          created_at: string
+          firm_name: string | null
+          full_name: string | null
+          id: string
+          notes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_tier?: string
+          created_at?: string
+          firm_name?: string | null
+          full_name?: string | null
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_tier?: string
+          created_at?: string
+          firm_name?: string | null
+          full_name?: string | null
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       investor_updates: {
         Row: {
           created_at: string

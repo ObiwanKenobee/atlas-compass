@@ -16,6 +16,7 @@ import InvestorFeed from "@/components/dashboard/InvestorFeed";
 import ExportButton from "@/components/dashboard/ExportButton";
 import HistoricalTrendsPanel from "@/components/dashboard/HistoricalTrendsPanel";
 import AuthPage from "./AuthPage";
+import MetricEditPanel from "@/components/dashboard/MetricEditPanel";
 
 const now = new Date();
 const dateStr = now.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
@@ -109,6 +110,11 @@ export default function Index() {
             <RunwaySimulator />
             <InvestorFeed />
           </div>
+        </motion.section>
+
+        <motion.section initial={sectionInitial} whileInView={sectionAnimate} viewport={{ once: true, margin: "-80px" }} transition={{ ...sectionTransition, delay: 0.05 }}>
+          <SectionDivider label="Founder Controls" />
+          <MetricEditPanel />
         </motion.section>
 
         <footer className="pb-8 flex items-center justify-between text-xs text-muted-foreground border-t border-border pt-6">
