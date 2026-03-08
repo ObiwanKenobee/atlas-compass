@@ -86,6 +86,24 @@ export function useInvestorUpdates() {
   });
 }
 
+export function useAddInvestorUpdate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: { title: string; description: string; update_type: string }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      const { error } = await supabase.from("investor_updates").insert({
+        title: payload.title,
+        description: payload.description,
+        update_type: payload.update_type,
+        update_date: new Date().toISOString().slice(0, 10),
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["investor_updates"] }),
+  });
+}
+
 export function useRevenueStreams() {
   return useQuery({
     queryKey: ["revenue_streams"],
