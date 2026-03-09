@@ -69,9 +69,8 @@ export default function AuthPage() {
         >
           <div
             className="w-14 h-14 rounded-2xl overflow-hidden mx-auto mb-4 ring-1"
-            style={{
+          style={{
               background: "hsl(var(--surface-2))",
-              ringColor: "hsl(var(--border))",
               boxShadow: "0 0 32px hsl(var(--primary) / 0.15)",
             }}
           >
