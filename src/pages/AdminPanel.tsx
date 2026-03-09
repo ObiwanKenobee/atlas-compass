@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Shield, ChevronLeft, Loader2, Check, Users, Edit2 } from "lucide-react";
+import {
+  Shield, ChevronLeft, Loader2, Check, Users, Edit2, Search, X, Clock,
+} from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useInvestorProfile } from "@/hooks/useDashboardData";
 import { useNavigate } from "react-router-dom";
 import atlasLogo from "@/assets/atlas-logo.png";
+import { formatDistanceToNow } from "date-fns";
 
 type InvestorProfile = {
   id: string;
@@ -15,6 +18,7 @@ type InvestorProfile = {
   access_tier: string;
   notes: string | null;
   updated_at: string;
+  created_at: string;
 };
 
 function useAllProfiles() {
@@ -62,32 +66,32 @@ function ProfileRow({ profile }: { profile: InvestorProfile }) {
     setTier(newTier);
     await updateProfile({ id: profile.id, updates: { access_tier: newTier } });
     setSaved(true);
-    setTimeout(() => setSaved(false), 1500);
+    setTimeout(() => setSaved(false), 1800);
   };
 
   const handleNotesSave = async () => {
     await updateProfile({ id: profile.id, updates: { notes } });
     setEditingNotes(false);
     setSaved(true);
-    setTimeout(() => setSaved(false), 1500);
+    setTimeout(() => setSaved(false), 1800);
   };
 
   const initials = profile.full_name
     ? profile.full_name.trim().split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase()
-    : (profile.user_id.slice(0, 2).toUpperCase());
+    : profile.user_id.slice(0, 2).toUpperCase();
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl border p-4 flex flex-col gap-3"
+      className="rounded-xl border p-4 flex flex-col gap-3 transition-all"
       style={{
         background: "hsl(var(--surface-1))",
         borderColor: "hsl(var(--border))",
       }}
     >
-      {/* Header row */}
-      <div className="flex items-center gap-3">
+      {/* Header */}
+      <div className="flex items-start gap-3">
         <div
           className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
           style={{
@@ -99,27 +103,35 @@ function ProfileRow({ profile }: { profile: InvestorProfile }) {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold truncate">
-            {profile.full_name ?? <span style={{ color: "hsl(var(--muted-foreground))" }}>Unnamed Investor</span>}
+            {profile.full_name ?? (
+              <span style={{ color: "hsl(var(--muted-foreground))" }}>Unnamed Investor</span>
+            )}
           </p>
           <p className="text-xs truncate" style={{ color: "hsl(var(--muted-foreground))" }}>
-            {profile.firm_name ?? "—"} · {profile.user_id.slice(0, 8)}…
+            {profile.firm_name ?? "No firm"} · {profile.user_id.slice(0, 8)}…
           </p>
         </div>
-        {saved && (
-          <span
-            className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full"
-            style={{ background: "hsl(var(--signal-green) / 0.12)", color: "hsl(var(--signal-green))" }}
-          >
-            <Check className="w-3 h-3" /> Saved
-          </span>
-        )}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {saved && (
+            <motion.span
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full"
+              style={{
+                background: "hsl(var(--signal-green) / 0.12)",
+                color: "hsl(var(--signal-green))",
+              }}
+            >
+              <Check className="w-3 h-3" /> Saved
+            </motion.span>
+          )}
+        </div>
       </div>
 
-      {/* Access tier toggle */}
+      {/* Access tier */}
       <div className="flex items-center gap-2">
-        <span className="text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>
-          Access tier:
-        </span>
+        <span className="text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>Tier:</span>
         <div
           className="flex rounded-lg p-0.5 gap-0.5"
           style={{ background: "hsl(var(--surface-2))" }}
@@ -129,7 +141,7 @@ function ProfileRow({ profile }: { profile: InvestorProfile }) {
               key={t}
               onClick={() => handleTierChange(t)}
               disabled={isPending}
-              className="px-3 py-1 rounded-md text-xs font-medium capitalize transition-all duration-200"
+              className="px-3 py-1 rounded-md text-xs font-medium capitalize transition-all duration-200 min-w-[68px]"
               style={{
                 background: tier === t ? "hsl(var(--primary))" : "transparent",
                 color: tier === t
@@ -137,9 +149,13 @@ function ProfileRow({ profile }: { profile: InvestorProfile }) {
                   : "hsl(var(--muted-foreground))",
               }}
             >
-              {isPending && tier !== t ? <Loader2 className="w-3 h-3 animate-spin inline" /> : t}
+              {isPending ? <Loader2 className="w-3 h-3 animate-spin inline" /> : t}
             </button>
           ))}
+        </div>
+        <div className="ml-auto flex items-center gap-1 text-xs" style={{ color: "hsl(var(--muted-foreground) / 0.6)" }}>
+          <Clock className="w-3 h-3" />
+          {formatDistanceToNow(new Date(profile.updated_at), { addSuffix: true })}
         </div>
       </div>
 
@@ -151,11 +167,11 @@ function ProfileRow({ profile }: { profile: InvestorProfile }) {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              placeholder="Investment context, communication preferences…"
+              placeholder="Investment context, communication preferences, ticket size…"
               className="w-full px-3 py-2 rounded-lg border text-xs outline-none resize-none"
               style={{
                 background: "hsl(var(--surface-2))",
-                borderColor: "hsl(var(--border))",
+                borderColor: "hsl(var(--primary) / 0.4)",
                 color: "hsl(var(--foreground))",
               }}
             />
@@ -164,13 +180,19 @@ function ProfileRow({ profile }: { profile: InvestorProfile }) {
                 onClick={handleNotesSave}
                 disabled={isPending}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
-                style={{ background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }}
+                style={{
+                  background: "hsl(var(--primary))",
+                  color: "hsl(var(--primary-foreground))",
+                }}
               >
                 {isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
-                Save notes
+                Save
               </button>
               <button
-                onClick={() => { setEditingNotes(false); setNotes(profile.notes ?? ""); }}
+                onClick={() => {
+                  setEditingNotes(false);
+                  setNotes(profile.notes ?? "");
+                }}
                 className="px-3 py-1.5 rounded-lg text-xs"
                 style={{ color: "hsl(var(--muted-foreground))" }}
               >
@@ -181,16 +203,25 @@ function ProfileRow({ profile }: { profile: InvestorProfile }) {
         ) : (
           <button
             onClick={() => setEditingNotes(true)}
-            className="flex items-start gap-1.5 text-left w-full group"
+            className="flex items-start gap-1.5 text-left w-full group rounded-lg px-2 py-1.5 transition-colors"
+            style={{ background: "hsl(var(--surface-2))" }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "hsl(var(--surface-3))";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "hsl(var(--surface-2))";
+            }}
           >
             <Edit2
-              className="w-3 h-3 mt-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="w-3 h-3 mt-0.5 flex-shrink-0 opacity-40 group-hover:opacity-80 transition-opacity"
               style={{ color: "hsl(var(--primary))" }}
             />
             <p
-              className="text-xs"
+              className="text-xs leading-relaxed"
               style={{
-                color: notes ? "hsl(var(--muted-foreground))" : "hsl(var(--muted-foreground) / 0.5)",
+                color: notes
+                  ? "hsl(var(--muted-foreground))"
+                  : "hsl(var(--muted-foreground) / 0.4)",
               }}
             >
               {notes || "Click to add notes…"}
@@ -206,8 +237,23 @@ export default function AdminPanel() {
   const navigate = useNavigate();
   const { data: myProfile, isLoading: profileLoading } = useInvestorProfile();
   const { data: profiles, isLoading: profilesLoading } = useAllProfiles();
+  const [search, setSearch] = useState("");
 
-  // Gate: only full-access investors
+  const filtered = useMemo(() => {
+    if (!profiles) return [];
+    if (!search.trim()) return profiles;
+    const q = search.toLowerCase();
+    return profiles.filter(
+      (p) =>
+        p.full_name?.toLowerCase().includes(q) ||
+        p.firm_name?.toLowerCase().includes(q) ||
+        p.access_tier.toLowerCase().includes(q)
+    );
+  }, [profiles, search]);
+
+  const fullCount = profiles?.filter((p) => p.access_tier === "full").length ?? 0;
+  const observerCount = profiles?.filter((p) => p.access_tier === "observer").length ?? 0;
+
   if (!profileLoading && myProfile?.access_tier !== "full") {
     return (
       <div
@@ -234,7 +280,6 @@ export default function AdminPanel() {
 
   return (
     <div className="min-h-screen" style={{ background: "hsl(var(--background))" }}>
-      {/* Header */}
       <header
         className="sticky top-0 z-40 border-b"
         style={{
@@ -283,23 +328,95 @@ export default function AdminPanel() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
+          {/* Page title */}
           <div className="flex items-center gap-3 mb-2">
             <Users className="w-5 h-5" style={{ color: "hsl(var(--primary))" }} />
             <h1 className="font-display text-xl font-bold">Investor Profiles</h1>
           </div>
-          <p className="text-sm mb-8" style={{ color: "hsl(var(--muted-foreground))" }}>
+          <p className="text-sm mb-6" style={{ color: "hsl(var(--muted-foreground))" }}>
             Manage access tiers and notes for all investors in the Atlas Sanctum portal.
           </p>
 
+          {/* Stats bar */}
+          {!profilesLoading && profiles && profiles.length > 0 && (
+            <div className="grid grid-cols-3 gap-3 mb-6">
+              {[
+                { label: "Total Investors", value: profiles.length, color: "hsl(var(--foreground))" },
+                { label: "Full Access", value: fullCount, color: "hsl(var(--primary))" },
+                { label: "Observers", value: observerCount, color: "hsl(var(--muted-foreground))" },
+              ].map(({ label, value, color }) => (
+                <div
+                  key={label}
+                  className="rounded-xl border px-4 py-3"
+                  style={{
+                    background: "hsl(var(--surface-1))",
+                    borderColor: "hsl(var(--border))",
+                  }}
+                >
+                  <p className="text-xs text-muted-foreground mb-1">{label}</p>
+                  <p className="text-2xl font-bold font-mono-custom" style={{ color }}>
+                    {value}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Search bar */}
+          {!profilesLoading && profiles && profiles.length > 0 && (
+            <div className="relative mb-5">
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5"
+                style={{ color: "hsl(var(--muted-foreground))" }}
+              />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name, firm, or tier…"
+                className="w-full pl-9 pr-9 py-2.5 rounded-xl border text-sm outline-none transition-colors"
+                style={{
+                  background: "hsl(var(--surface-1))",
+                  borderColor: "hsl(var(--border))",
+                  color: "hsl(var(--foreground))",
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = "hsl(var(--primary) / 0.4)";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = "hsl(var(--border))";
+                }}
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                  style={{ color: "hsl(var(--muted-foreground))" }}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* List */}
           {profilesLoading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="w-6 h-6 animate-spin" style={{ color: "hsl(var(--primary))" }} />
             </div>
-          ) : profiles && profiles.length > 0 ? (
+          ) : filtered.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {profiles.map((p) => (
+              {filtered.map((p) => (
                 <ProfileRow key={p.id} profile={p} />
               ))}
+            </div>
+          ) : search ? (
+            <div
+              className="text-center py-12 rounded-2xl border"
+              style={{ borderColor: "hsl(var(--border))", color: "hsl(var(--muted-foreground))" }}
+            >
+              <Search className="w-7 h-7 mx-auto mb-3 opacity-30" />
+              <p className="text-sm">No profiles match "{search}"</p>
             </div>
           ) : (
             <div
